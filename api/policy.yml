@@ -1,0 +1,227 @@
+openapi: '3.0.2'
+info:
+  title: API to retreive policy
+  version: '1.0'
+servers:
+  - url: https://api.server.test/v1
+paths:
+  /v1/policies:
+    post:
+      operationId: savePolicy
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Policy'
+      responses:
+        '201':
+          description: policy saved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyId'
+        '400':
+          description: Incorrect input
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/policies/{policy_name}:
+    get:
+      operationId: getPolicy
+      parameters:
+        - in: "path"
+          name: "policy_name"
+          required: true
+          description: "The policy name"
+          schema:
+            type: string
+            example: policy
+      responses:
+        '201':
+          description: Policy fetched successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Policy"
+        '400':
+          description: Request body is missing or request body is incomplete
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/policies/find/{match_string}:
+    get:
+      operationId: findPolicies
+      parameters:
+        - in: "path"
+          name: "match_string"
+          required: true
+          description: "The the string to match"
+          schema:
+            type: string
+            example: policy
+      responses:
+        '201':
+          description: Policy matches fetched successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PolicyMatchesResponse"
+        '400':
+          description: Request body is missing or request body is incomplete
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
+components:
+  schemas:
+    PolicyMatchesResponse:
+      required:
+        - info
+        - data
+        - success
+      properties:
+        info:
+          $ref : '#/components/schemas/information'
+        data:
+          $ref: '#/components/schemas/matchesdata'
+        success:                    
+          type: boolean
+          example: true   
+
+    PolicyResponse:
+      required:
+        - info
+        - data
+        - success
+      properties:
+        info:
+          $ref : '#/components/schemas/information'
+        data:
+          $ref: '#/components/schemas/data'
+        success:                    
+          type: boolean
+          example: true  
+    ErrorResponse:
+      properties:
+        code:
+          type: integer
+          format: int32
+        component: 
+          type: string
+        msg:
+          type: string
+    filter:
+      type: object
+      properties:
+        like:
+          type: array
+          items:
+            type: string
+            example: srv:EndPoint
+        equals:
+          type: array
+          items:
+            type: string
+            example: srv:EndPoint
+    information:
+      required:
+        - version
+        - name 
+        - timestamp
+      type: object
+      properties:
+        version:
+          type: string
+          example: "1.0"
+        name:
+          type: string
+          example: "policies"
+        timestamp:
+          type: number
+          format: float
+    Statement:
+      type: object
+      properties:
+        sid:
+          type: string
+          example: statement-id
+        effect:
+          type: string
+          example: allow-deny
+        actions:
+          type: array
+          items:
+            type: string
+            example : srv:ListEndpoint
+        resource: 
+          type: string
+          example : -or-SRV:*-or-APP
+        filter :
+            $ref : '#/components/schemas/filter'
+    data: 
+      required:
+        - version
+        - name
+      type: object
+      properties:
+        version:
+          type: string
+          example : "1.0"
+        name: 
+          type: string
+          example: "policy_name"
+        statement:
+          $ref : '#/components/schemas/Statement'
+    matchesdata: 
+      type: array
+      items: 
+        $ref: '#/components/schemas/match'
+    match:  
+        properties:
+          id:
+            type: integer
+            format: int64
+            example : 1234455
+          name: 
+            type: string
+            example: "policy_name"
+    Policy:
+      type: object
+      required:
+        - version
+        - name
+        - statements
+      properties:
+        version:
+          type: string
+          example: "1.0"
+        name:
+          type: string
+          example: "my-polcy"
+        statements:
+          type: array
+          items:
+            $ref: '#/components/schemas/Statement'
+    PolicyId:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 6ef6474gd7346
+        
+        
+      
+
+          
+  

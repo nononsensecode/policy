@@ -1,0 +1,18 @@
+server:
+  http:
+    port: 8000
+    corsAllowedOrigins:
+      - http://localhost:4200
+  log:
+    isDev: true
+  persistence:
+    mongoEnable: true
+platform:
+  name: local
+  config:
+    clientRepo:
+      host: localhost
+      port: 3306
+      username: root
+      password: redhat
+      dbName: auth_user_client

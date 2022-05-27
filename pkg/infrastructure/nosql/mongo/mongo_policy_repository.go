@@ -22,6 +22,9 @@ const (
 	MongoPolicyInsertUnmarshalError
 	MongoPolicyInvalidIdError
 	MongoPolicyFindByNameNotFoundError
+	MongoPolicyFindByNameMarshalByteError
+	MongoPolicyFindByNameUnmarshalMongoPolicyError
+	MongoPolicyFindByNameUnmarshalPolicyError
 )
 
 type MongoPolicyRepository struct {
@@ -62,7 +65,7 @@ func (m MongoPolicyRepository) Save(ctx context.Context, p policy.Policy) (saved
 	}()
 
 	mp := new(mongoPolicy)
-	if err = mp.Unmarshal(p); err != nil {
+	if err = mp.Marshal(p); err != nil {
 		err = errors.NewUnknownError(MongoPolicyInsertUnmarshalError, components.Policy, err)
 		return
 	}
@@ -101,13 +104,20 @@ func (m MongoPolicyRepository) FindByName(ctx context.Context, name string) (p p
 	}
 
 	coll := client.Database("dhp_policy").Collection("policies")
+	log.Debugf("Finding policy named %s", name)
 	filter := bson.D{{Key: "name", Value: name}}
-	var mp = mongoPolicy{}
-	if err = coll.FindOne(ctx, filter).Decode(&m); err != nil {
+	var r mongoPolicyD
+	if err = coll.FindOne(ctx, filter).Decode(&r); err != nil {
+		log.Error("cannot find the document: %+v", err)
 		err = errors.NewNotFoundError(MongoPolicyFindByNameNotFoundError, components.Policy, err)
 		return
 	}
 
-	p, err = mp.Marshal()
+	var mp mongoPolicy
+	if mp, err = r.Unmarshal(); err != nil {
+		return
+	}
+
+	p, err = mp.Unmarshal()
 	return
 }
